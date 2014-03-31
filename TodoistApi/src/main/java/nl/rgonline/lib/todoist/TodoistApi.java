@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,8 +14,11 @@ public class TodoistApi {
 	private String password;
 	private String token;
 	
+	private int seq_no = 0;
+	private TodoistData data;
+	
 	public TodoistApi() {
-		
+		data = new TodoistData();
 	}
 	
 	/**
@@ -47,4 +51,54 @@ public class TodoistApi {
 			return false;
 		}
 	}
+	
+	/**
+	 * This methods syncs all data from todoist with the get method from the TodoistSync API.
+	 * @return The TodoistData object, containing all the data
+	 * @throws TodoistException When an error occurs
+	 */
+	public TodoistData get() throws TodoistException {
+		if (token==null) {
+			TodoistLogger.error("TodoistApi", "syncGet()", "Not logged in");
+			throw new TodoistException("Not logged in");
+		}
+		
+		ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+		params.add(new BasicNameValuePair("api_token", token));
+		params.add(new BasicNameValuePair("seq_no", "" + seq_no));
+		JSONObject srvresponse = TodoistNetworking.doPostRequest(BASE_URL + "/TodoistSync/v5.1/get", params);
+		try {
+			TodoistLogger.debug("TodoistApi", "syncGet()", "Login OK. Response: " + srvresponse);
+			JSONObject response = srvresponse.getJSONObject("response");
+			seq_no = response.getInt("seq_no");
+			
+			//Items
+			JSONArray items = response.getJSONArray("Items");
+			for (int i=0; i < items.length(); i++) {
+				Item item = new Item(data, items.getJSONObject(i));
+				data.addItem(item);
+			}
+			
+			//Labels
+			JSONArray labels = response.getJSONArray("Labels");
+			for (int i=0; i < labels.length(); i++) {
+				Label label = new Label(data, labels.getJSONObject(i));
+				data.addLabel(label);
+			}
+		} catch (JSONException e) {
+			TodoistLogger.error("TodoistApi", "syncGet()", "JSON Exception in answer. Unexpected answer from the server");
+			throw new TodoistException("JSON Exception in answer. Unexpected answer from the server", e);
+		}
+		return data;
+	}
+	
+	/**
+	 * This methods syncs all data from and to todoist with the syncAndGetUpdated method from the TodoistSync API.
+	 * @return The updated TodoistData
+	 * @throws TodoistException When an error occurs
+	 */
+	public void syncAndGetUpdated() {
+		
+	}
+	
 }
