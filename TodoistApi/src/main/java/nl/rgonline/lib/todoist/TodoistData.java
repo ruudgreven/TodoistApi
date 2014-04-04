@@ -92,8 +92,18 @@ public class TodoistData extends Observable implements Observer {
 	
 	public Label addLabel(String name, int color) {
 		Label label = new Label(name, color);
-		this.addLabel(label);
-		return label;
+		if (!labels.contains(label)) {
+			labelsById.put(label.getId(), label);
+			labelsByName.put(label.getName(), label);
+			labels.add(label);
+			
+			this.setChanged();
+			this.notifyObservers(labels);
+			return label;
+		} else {
+			return labelsByName.get(name);
+		}
+		
 	}
 	
 	/**

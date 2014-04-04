@@ -51,7 +51,7 @@ public class Item extends Observable {
 		is_archived = obj.getInt("is_archived") == 1 ? true : false;
 		day_order = obj.getInt("day_order");
 		collapsed = obj.getInt("collapsed") == 1 ? true: false;
-		id = obj.getInt("id");
+		id = obj.getLong("id");
 		has_notifications = obj.getInt("has_notifications") == 1 ? true: false;
 		content = obj.getString("content");
 		item_order = obj.getInt("item_order");

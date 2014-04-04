@@ -33,7 +33,7 @@ public class Project extends Observable {
 		indent = obj.getInt("indent");
 		is_archived = obj.getInt("is_archived") == 1 ? true: false;
 		collapsed = obj.getInt("collapsed") == 1 ? true: false;
-		id = obj.getInt("id");
+		id = obj.getLong("id");
 		is_deleted = obj.getInt("is_deleted") == 1 ? true : false;
 		item_order = obj.getInt("item_order");
 		color = obj.getInt("color");

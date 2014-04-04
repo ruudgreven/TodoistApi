@@ -52,18 +52,13 @@ public class SyncTest {
 			try {
 				//Gets data
 				TodoistData data = api.get();
-				
-				//Add label
-				Label nwLabel = data.addLabel("Pomodorange tester", 1);
-				
+			
 				//Updates all inbox items
 				Project inbox = data.getProject("Inbox");
 				ArrayList<Item> items = inbox.getItems();
 				for (Item item: items) {
 					item.setContent(item.getContent() + " - updated");
-					item.addLabel(nwLabel);
 				}
-				System.out.println(data);
 				api.syncAndGetUpdated();
 				System.out.println(data);
 			} catch (TodoistException e) {

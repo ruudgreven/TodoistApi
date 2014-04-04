@@ -33,7 +33,7 @@ public class Label extends Observable {
 		this.data = data;
 		
 		uid = obj.getInt("uid");
-		id = obj.getInt("id");
+		id = obj.getLong("id");
 		is_deleted = obj.getInt("is_deleted") == 1 ? true : false;
 		color = obj.getInt("color");
 		name = obj.getString("name");
@@ -43,6 +43,7 @@ public class Label extends Observable {
 		if (temp_id != 0) {
 			long unixtime = (int) (System.currentTimeMillis() / 1000L);
 			String jsonString = "{\"type\": \"label_register\",\"timestamp\": " + unixtime + ",\"args\": {";
+			jsonString +="\"id\": \"" + temp_id + "\",";
 			jsonString +="\"name\": \"" + name + "\",";
 			jsonString +="\"color\": \"" + color + "\"";
 			jsonString += "}}";
@@ -51,6 +52,7 @@ public class Label extends Observable {
 		} else if (updated) {
 			long unixtime = (int) (System.currentTimeMillis() / 1000L);
 			String jsonString = "{\"type\": \"label_update\",\"timestamp\": " + unixtime + ",\"args\": {";
+			jsonString +="\"id\": \"" + id + "\",";
 			jsonString +="\"name\": \"" + name + "\",";
 			jsonString +="\"color\": \"" + color + "\"";
 			jsonString += "}}";
