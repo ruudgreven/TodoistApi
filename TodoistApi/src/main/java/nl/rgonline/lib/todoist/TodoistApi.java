@@ -67,6 +67,53 @@ public class TodoistApi {
 		params.add(new BasicNameValuePair("api_token", token));
 		params.add(new BasicNameValuePair("seq_no", "" + seq_no));
 		JSONObject srvresponse = TodoistNetworking.doPostRequest(BASE_URL + "/TodoistSync/v5.1/get", params);
+		handleResponse(srvresponse);
+		
+		return data;
+	}
+	
+	/**
+	 * This methods syncs all data from and to todoist with the syncAndGetUpdated method from the TodoistSync API.
+	 * @return The updated TodoistData
+	 * @throws TodoistException When an error occurs
+	 */
+	public void syncAndGetUpdated() throws TodoistException {
+		if (token==null) {
+			TodoistLogger.error("TodoistApi", "syncGet()", "Not logged in");
+			throw new TodoistException("Not logged in");
+		}
+		
+		JSONArray itemsToSync = new JSONArray();
+		for (Item item: data.items) {
+			JSONObject obj = item.writeJson();
+			if (obj!=null) {
+				itemsToSync.put(obj);
+			}
+		}
+		for (Label label: data.labels) {
+			JSONObject obj = label.writeJson();
+			if (obj!=null) {
+				itemsToSync.put(obj);
+			}
+		}
+		for (Project project: data.projects) {
+			JSONObject obj = project.writeJson();
+			if (obj!=null) {
+				itemsToSync.put(obj);
+			}
+		}
+		
+		TodoistLogger.debug("TodoistApi", "syncAndGetUpdated()", "Going to sync, send text: " + itemsToSync.toString());
+		ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+		params.add(new BasicNameValuePair("api_token", token));
+		params.add(new BasicNameValuePair("seq_no", "" + seq_no));
+		params.add(new BasicNameValuePair("items_to_sync", "" + itemsToSync.toString()));
+		JSONObject srvresponse = TodoistNetworking.doPostRequest(BASE_URL + "/TodoistSync/v5.1/syncAndGetUpdated", params);
+		handleResponse(srvresponse);
+	}
+	
+	
+	private void handleResponse(JSONObject srvresponse) throws TodoistException {
 		try {
 			TodoistLogger.debug("TodoistApi", "syncGet()", "Login OK. Response: " + srvresponse);
 			JSONObject response = srvresponse.getJSONObject("response");
@@ -85,20 +132,17 @@ public class TodoistApi {
 				Label label = new Label(data, labels.getJSONObject(i));
 				data.addLabel(label);
 			}
+			
+			//Projects
+			JSONArray projects = response.getJSONArray("Projects");
+			for (int i=0; i < projects.length(); i++) {
+				Project project = new Project(data, projects.getJSONObject(i));
+				data.addProject(project);
+			}
 		} catch (JSONException e) {
 			TodoistLogger.error("TodoistApi", "syncGet()", "JSON Exception in answer. Unexpected answer from the server");
 			throw new TodoistException("JSON Exception in answer. Unexpected answer from the server", e);
 		}
-		return data;
-	}
-	
-	/**
-	 * This methods syncs all data from and to todoist with the syncAndGetUpdated method from the TodoistSync API.
-	 * @return The updated TodoistData
-	 * @throws TodoistException When an error occurs
-	 */
-	public void syncAndGetUpdated() {
-		
 	}
 	
 }

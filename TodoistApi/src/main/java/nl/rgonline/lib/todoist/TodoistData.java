@@ -21,16 +21,24 @@ import java.util.Observer;
  *
  */
 public class TodoistData extends Observable implements Observer {
-	private HashMap<Integer, Item> itemsById;
-	private ArrayList<Item> items;
-	private HashMap<Integer, Label> labelsById;
-	private ArrayList<Label> labels;
+	protected HashMap<Long, Item> itemsById;
+	protected ArrayList<Item> items;
+	protected HashMap<Long, Label> labelsById;
+	protected HashMap<String, Label> labelsByName;
+	protected ArrayList<Label> labels;
+	protected HashMap<Long, Project> projectsById;
+	protected HashMap<String, Project> projectsByName;
+	protected ArrayList<Project> projects;
 	
 	protected TodoistData() {
-		itemsById = new HashMap<Integer, Item>();
+		itemsById = new HashMap<Long, Item>();
 		items = new ArrayList<Item>();
-		labelsById = new HashMap<Integer, Label>();
+		labelsById = new HashMap<Long, Label>();
+		labelsByName = new HashMap<String, Label>();
 		labels = new ArrayList<Label>();
+		projectsById = new HashMap<Long, Project>();
+		projectsByName = new HashMap<String, Project>();
+		projects = new ArrayList<Project>();
 	}
 	
 	/**
@@ -46,12 +54,14 @@ public class TodoistData extends Observable implements Observer {
 	 * @param item
 	 */
 	protected void addItem(Item item) {
-		item.addObserver(this);
-		itemsById.put(item.getId(), item);
-		items.add(item);
+		if (!items.contains(item)) {
+			item.addObserver(this);
+			itemsById.put(item.getId(), item);
+			items.add(item);
 		
-		this.setChanged();
-		this.notifyObservers(itemsById);
+			this.setChanged();
+			this.notifyObservers(items);
+		}
 	}
 	
 	/**
@@ -69,12 +79,21 @@ public class TodoistData extends Observable implements Observer {
 	 * @param item
 	 */
 	protected void addLabel(Label label) {
-		label.addObserver(this);
-		labelsById.put(label.getId(), label);
-		labels.add(label);
-		
-		this.setChanged();
-		this.notifyObservers(labelsById);
+		if (!labels.contains(label)) {
+			label.addObserver(this);
+			labelsById.put(label.getId(), label);
+			labelsByName.put(label.getName(), label);
+			labels.add(label);
+			
+			this.setChanged();
+			this.notifyObservers(labels);
+		}
+	}
+	
+	public Label addLabel(String name, int color) {
+		Label label = new Label(name, color);
+		this.addLabel(label);
+		return label;
 	}
 	
 	/**
@@ -82,17 +101,68 @@ public class TodoistData extends Observable implements Observer {
 	 * @param id The id to look for
 	 * @return The label with the given id
 	 */
-	protected Label getLabel(int id) {
+	protected Label getLabel(long id) {
 		return labelsById.get(id);
 	}
 	
+	/**
+	 * Returns a label with the given name
+	 * @param name The name of the label
+	 * @return The label with the given name or null when it does not exists
+	 */
+	public Label getLabel(String name) {
+		return labelsByName.get(name);
+	}
+	
+	public ArrayList<Project> getProjects() {
+		return projects;
+	}
+	
+	/**
+	 * Add a project to the Todoist account. Only used internal by the API
+	 * @param item
+	 */
+	protected void addProject(Project project) {
+		if (!projects.contains(project)) {
+			project.addObserver(this);
+			projectsById.put(project.getId(), project);
+			projectsByName.put(project.getName(), project);
+			projects.add(project);
+			
+			this.setChanged();
+			this.notifyObservers(projects);
+		}
+	}
+	
+	/**
+	 * Returns a project with the given id. Only used internal by the API
+	 * @param id The id to look for
+	 * @return The project with the given id
+	 */
+	protected Project getProject(long id) {
+		return projectsById.get(id);
+	}
+	
+	/**
+	 * Returns a project with the given name
+	 * @param name The name of the project
+	 * @return A project, or null when it not exist
+	 */
+	public Project getProject(String name) {
+		return projectsByName.get(name);
+	}
+	
 	public String toString() {
-		String retVal = "Items:\n";
-		for (Item item: itemsById.values()) {
+		String retVal = "Projects:\n";
+		for (Project project: projects) {
+			retVal += project + "\n";
+		}
+		retVal += "\nItems:\n";
+		for (Item item: items) {
 			retVal += item + "\n";
 		}
 		retVal += "\nLabels:\n";
-		for (Label label: labelsById.values()) {
+		for (Label label: labels) {
 			retVal += label + "\n";
 		}
 		

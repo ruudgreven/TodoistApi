@@ -5,15 +5,29 @@ import java.util.Observable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * Represents a todoist Label
+ * @author ruudgreven
+ *
+ */
 public class Label extends Observable {
 	private TodoistData data;
 	private boolean updated = false;
 	
 	private int uid;
-	private int id;
+	private long id;
+	private long temp_id;
 	private boolean is_deleted;
 	private int color;
 	private String name;
+	
+	protected Label(String name, int color) {
+		this.name = name;
+		this.color = color;
+		
+		long unixtime = (int) (System.currentTimeMillis() / 1000L);
+		temp_id = Long.parseLong("325" + unixtime);
+	}
 	
 	protected Label(TodoistData data, JSONObject obj) throws JSONException {
 		this.data = data;
@@ -24,8 +38,30 @@ public class Label extends Observable {
 		color = obj.getInt("color");
 		name = obj.getString("name");
 	}
+	
+	protected JSONObject writeJson() {
+		if (temp_id != 0) {
+			long unixtime = (int) (System.currentTimeMillis() / 1000L);
+			String jsonString = "{\"type\": \"label_register\",\"timestamp\": " + unixtime + ",\"args\": {";
+			jsonString +="\"name\": \"" + name + "\",";
+			jsonString +="\"color\": \"" + color + "\"";
+			jsonString += "}}";
+			return new JSONObject(jsonString);
+			
+		} else if (updated) {
+			long unixtime = (int) (System.currentTimeMillis() / 1000L);
+			String jsonString = "{\"type\": \"label_update\",\"timestamp\": " + unixtime + ",\"args\": {";
+			jsonString +="\"name\": \"" + name + "\",";
+			jsonString +="\"color\": \"" + color + "\"";
+			jsonString += "}}";
+			return new JSONObject(jsonString);
+			
+		} else {
+			return null;
+		}
+	}
 
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 	
@@ -80,6 +116,11 @@ public class Label extends Observable {
 		}
 		Label other = (Label)o;
 		return id == other.id;
+	}
+	
+	@Override
+	public int hashCode() {
+		return (int)id;
 	}
 	
 	private void updated() {

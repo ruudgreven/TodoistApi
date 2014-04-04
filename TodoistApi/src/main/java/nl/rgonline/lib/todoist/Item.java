@@ -1,5 +1,6 @@
 package nl.rgonline.lib.todoist;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Observable;
@@ -19,13 +20,14 @@ public class Item extends Observable {
 		
 	private int sync_id;
 	private int indent;
-	private int[] labels;
+	private ArrayList<Long> labels;
 	private Item children;
 	private int responsible_uid;
 	private boolean is_archived;
 	private int day_order;
 	private boolean collapsed;
-	private int id;
+	private long id;
+	private long temp_id;
 	private boolean has_notifications;
 	private String content;
 	private int item_order;
@@ -64,9 +66,9 @@ public class Item extends Observable {
 		
 		//Read labels
 		JSONArray labelArray = obj.getJSONArray("labels");
-		labels = new int[labelArray.length()];
+		labels = new ArrayList<Long>();
 		for (int i=0; i < labelArray.length(); i++) {
-			labels[i] = labelArray.getInt(i);
+			labels.add(labelArray.getLong(i));
 		}
 		
 		//Read children
@@ -79,10 +81,31 @@ public class Item extends Observable {
 	}
 	
 	protected JSONObject writeJson() {
-		return null;
+		if (temp_id != 0) {
+			return null;
+		} else if (updated) {
+			long unixtime = (int) (System.currentTimeMillis() / 1000L);
+			String jsonString = "{\"type\": \"item_update\",\"timestamp\": " + unixtime + ",\"args\": {";
+			jsonString +="\"content\": \"" + content + "\",";
+			jsonString +="\"project_id\": " + project_id + ",";
+			jsonString +="\"indent\": " + indent + ",";
+			jsonString +="\"priority\": " + priority + ",";
+			jsonString +="\"checked\": " + (checked ? 1: 0) + ",";
+			//jsonString +="\"date_string\": " + date_string + ",";
+			//jsonString +="\"due_date_utc\": " + due_date_utc + ",";
+			jsonString +="\"item_order\": " + item_order + ",";
+			jsonString +="\"day_order\": " + day_order + ",";
+			jsonString +="\"assigned_by_uid\": " + assigned_by_uid + ",";
+			jsonString +="\"responsible_uid\": " + responsible_uid + ",";
+			jsonString +="\"id\": \"" + id + "\"";
+			jsonString += "}}";
+			return new JSONObject(jsonString);
+		} else {
+			return null;
+		}
 	}
 	
-	protected int getId() {
+	protected long getId() {
 		return id;
 	}
 	
@@ -97,12 +120,24 @@ public class Item extends Observable {
 		}
 	}
 	
+	/**
+	 * Returns the set of labels
+	 * @return
+	 */
 	public HashSet<Label> getLabels() {
 		HashSet<Label> retVal = new HashSet<Label>();
-		for (int labelId: labels) {
+		for (long labelId: labels) {
 			retVal.add(data.getLabel(labelId));
 		}
 		return retVal;
+	}
+	
+	/**
+	 * Adds a label to the list of labels
+	 * @return
+	 */
+	public void addLabel(Label label) {
+		labels.add(label.getId());
 	}
 	
 	public boolean isArchived() {
@@ -226,6 +261,10 @@ public class Item extends Observable {
 		}
 	}
 	
+	public Project getProject() {
+		return data.getProject(project_id);
+	}
+	
 	
 	@Override
 	public boolean equals(Object o) {
@@ -234,6 +273,11 @@ public class Item extends Observable {
 		}
 		Item other = (Item)o;
 		return id == other.id;
+	}
+	
+	@Override
+	public int hashCode() {
+		return (int)id;
 	}
 	
 	private void updated() {
