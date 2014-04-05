@@ -16,12 +16,13 @@ public class Label extends Observable {
 	
 	private int uid;
 	private long id;
-	private long temp_id;
+	private long temp_id = -1;
 	private boolean is_deleted;
 	private int color;
 	private String name;
 	
-	protected Label(String name, int color) {
+	protected Label(TodoistData data, String name, int color) {
+		this.data = data;
 		this.name = name;
 		this.color = color;
 		
@@ -40,14 +41,16 @@ public class Label extends Observable {
 	}
 	
 	protected JSONObject writeJson() {
-		if (temp_id != 0) {
+		if (temp_id != -1) {
 			long unixtime = (int) (System.currentTimeMillis() / 1000L);
 			String jsonString = "{\"type\": \"label_register\",\"timestamp\": " + unixtime + ",\"temp_id\": \"$" + temp_id + "\",\"args\": {";
 			jsonString +="\"name\": \"" + name + "\",";
 			jsonString +="\"color\": \"" + color + "\"";
 			jsonString += "}}";
-			return new JSONObject(jsonString);
 			
+			updated = false;
+			temp_id = -1;
+			return new JSONObject(jsonString);
 		} else if (updated) {
 			long unixtime = (int) (System.currentTimeMillis() / 1000L);
 			String jsonString = "{\"type\": \"label_update\",\"timestamp\": " + unixtime + ",\"args\": {";
@@ -55,10 +58,17 @@ public class Label extends Observable {
 			jsonString +="\"name\": \"" + name + "\",";
 			jsonString +="\"color\": \"" + color + "\"";
 			jsonString += "}}";
+			
+			updated = false;
+			temp_id = -1;
 			return new JSONObject(jsonString);
 		} else {
 			return null;
 		}
+	}
+	
+	public boolean isTemporary() {
+		return temp_id!=1;
 	}
 
 	public long getId() {

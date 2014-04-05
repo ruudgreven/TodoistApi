@@ -1,6 +1,9 @@
 package nl.rgonline.lib.todoist;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -83,25 +86,39 @@ public class TodoistApi {
 			throw new TodoistException("Not logged in");
 		}
 		
+		ArrayList<Item> itemsToRemove = new ArrayList<Item>();
+		ArrayList<Label> labelsToRemove = new ArrayList<Label>();
+		ArrayList<Project> projectsToRemove = new ArrayList<Project>();
+		
+		
 		JSONArray itemsToSync = new JSONArray();
-		for (Item item: data.items) {
-			JSONObject obj = item.writeJson();
+		for (Project project: data.projects) {
+			JSONObject obj = project.writeJson();
 			if (obj!=null) {
 				itemsToSync.put(obj);
 			}
+			projectsToRemove.add(project);
 		}
 		for (Label label: data.labels) {
 			JSONObject obj = label.writeJson();
 			if (obj!=null) {
 				itemsToSync.put(obj);
 			}
+			labelsToRemove.add(label);
 		}
-		for (Project project: data.projects) {
-			JSONObject obj = project.writeJson();
+		for (Item item: data.items) {
+			JSONObject obj = item.writeJson();
 			if (obj!=null) {
 				itemsToSync.put(obj);
 			}
+			itemsToRemove.add(item);
 		}
+
+
+		
+		data.items.removeAll(itemsToRemove);
+		data.labels.removeAll(labelsToRemove);
+		data.projects.removeAll(projectsToRemove);
 		
 		TodoistLogger.debug("TodoistApi", "syncAndGetUpdated()", "Going to sync, send text: " + itemsToSync.toString());
 		ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
@@ -143,6 +160,29 @@ public class TodoistApi {
 			TodoistLogger.error("TodoistApi", "syncGet()", "JSON Exception in answer. Unexpected answer from the server");
 			throw new TodoistException("JSON Exception in answer. Unexpected answer from the server", e);
 		}
+	}
+	
+	/**
+	 * Conerts a date string to a date object, null if the string is null
+	 * Example string: "Sat 16 Nov 2013 18:31:30 +0000"
+	 * @param dateString
+	 * @return
+	 */
+	protected static Date parseDate(String dateString) {
+		if (dateString == null || dateString.equals("null")) {
+			return null;
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+		try {
+			return sdf.parse(dateString);
+		} catch (ParseException e) {
+			return null;
+		}
+	}
+	
+	protected static String dateToDueDateString(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-ddTHH:mm");
+		return sdf.format(date);
 	}
 	
 }

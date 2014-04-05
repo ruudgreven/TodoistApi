@@ -2,6 +2,7 @@ package nl.rgonline.lib.todoist;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Observable;
@@ -24,20 +25,16 @@ public class TodoistData extends Observable implements Observer {
 	protected HashMap<Long, Item> itemsById;
 	protected ArrayList<Item> items;
 	protected HashMap<Long, Label> labelsById;
-	protected HashMap<String, Label> labelsByName;
 	protected ArrayList<Label> labels;
 	protected HashMap<Long, Project> projectsById;
-	protected HashMap<String, Project> projectsByName;
 	protected ArrayList<Project> projects;
 	
 	protected TodoistData() {
 		itemsById = new HashMap<Long, Item>();
 		items = new ArrayList<Item>();
 		labelsById = new HashMap<Long, Label>();
-		labelsByName = new HashMap<String, Label>();
 		labels = new ArrayList<Label>();
 		projectsById = new HashMap<Long, Project>();
-		projectsByName = new HashMap<String, Project>();
 		projects = new ArrayList<Project>();
 	}
 	
@@ -47,6 +44,15 @@ public class TodoistData extends Observable implements Observer {
 	 */
 	public ArrayList<Item> getItems() {
 		return items;
+	}
+	
+	protected Item getItemByContent(String content) {
+		for (Item item: items) {
+			if (item.getContent().equals(content)) {
+				return item;
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -63,15 +69,123 @@ public class TodoistData extends Observable implements Observer {
 			this.notifyObservers(items);
 		}
 	}
+
+	/**
+	 * Add a item with the given content to the inbox
+	 * @param content The content (text) for the item
+	 * @return The added item
+	 */
+	public Item addItem(String content) {
+		Project inboxProject = getProjectByName("Inbox");
+		return this.addItem(content, inboxProject, 1, 1, null, null, 0, 0, 1);
+	}
 	
 	/**
-	public void addItem(String content, Project project, int indent, int priority, String date_string, String due_date_utc, int assigned_by_uid, int responsible_uid, int item_order) {
-		
+	 * Add a item with the given characteristics
+	 * @param content The content (text) for the item
+	 * @param project The project to which the item belongs
+	 * @return The added item
+	 */
+	public Item addItem(String content, Project project) {
+		return this.addItem(content, project, 1, 1, null, null, 0, 0, 1);
 	}
-	**/
+	
+	/**
+	 * Add a item with the given characteristics
+	 * @param content The content (text) for the item
+	 * @param project The project to which the item belongs
+	 * @param indent The indent
+	 * @return The added item
+	 */
+	public Item addItem(String content, Project project, int indent) {
+		return this.addItem(content, project, indent, 1, null, null, 0, 0, 1);
+	}
+	
+	/**
+	 * Add a item with the given characteristics
+	 * @param content The content (text) for the item
+	 * @param project The project to which the item belongs
+	 * @param indent The indent
+	 * @param priority The priority of the item
+	 * @return The added item
+	 */
+	public Item addItem(String content, Project project, int indent, int priority) {
+		return this.addItem(content, project, indent, priority, null, null, 0, 0, 1);
+	}
+	
+	/**
+	 * Add a item with the given characteristics
+	 * @param content The content (text) for the item
+	 * @param project The project to which the item belongs
+	 * @param indent The indent
+	 * @param priority The priority of the item
+	 * @param date_string The date string for the due date
+	 * @param due_date The due date
+	 * @return The added item
+	 */
+	public Item addItem(String content, Project project, int indent, int priority, String date_string, Date due_date) {
+		return this.addItem(content, project, indent, priority, date_string, due_date, 0, 0, 1);
+	}
+	
+	/**
+	 * Add a item with the given characteristics
+	 * @param content The content (text) for the item
+	 * @param project The project to which the item belongs
+	 * @param indent The indent
+	 * @param priority The priority of the item
+	 * @param date_string The date string for the due date
+	 * @param due_date The due date
+	 * @param item_order The item_order of this item
+	 * @return The added item
+	 */
+	public Item addItem(String content, Project project, int indent, int priority, String date_string, Date due_date, int item_order) {
+		return this.addItem(content, project, indent, priority, date_string, due_date, 0, 0, item_order);
+	}
+	
+	/**
+	 * Add a item with the given characteristics
+	 * @param content The content (text) for the item
+	 * @param project The project to which the item belongs
+	 * @param indent The indent
+	 * @param priority The priority of the item
+	 * @param date_string The date string for the due date
+	 * @param due_date The due date
+	 * @param assigned_by_user The uid of the user to which this task is assigned to
+	 * @param responsible_uid The uid of the user who is responsible for this task
+	 * @param item_order The item_order of this item
+	 * @return The added item
+	 */
+	public Item addItem(String content, Project project, int indent, int priority, String date_string, Date due_date, int assigned_by_user, int responsible_uid, int item_order) {
+		if (project==null) {
+			return null;
+		}
+		Item item = new Item(this, content, project, indent, priority, date_string, due_date, assigned_by_user, responsible_uid, item_order);
+		if (!items.contains(item)) {
+			items.add(item);
+			
+			this.setChanged();
+			this.notifyObservers();
+			return item;
+		} else {
+			return getItemByContent(content);
+		}
+	}
 
+	/**
+	 * Returns all the labels of the Todoist account
+	 * @return The labels
+	 */
 	public ArrayList<Label> getLabels() {
 		return labels;
+	}
+	
+	protected Label getLabelByName(String name) {
+		for (Label label: labels) {
+			if (label.getName().equals(name)) {
+				return label;
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -82,7 +196,6 @@ public class TodoistData extends Observable implements Observer {
 		if (!labels.contains(label)) {
 			label.addObserver(this);
 			labelsById.put(label.getId(), label);
-			labelsByName.put(label.getName(), label);
 			labels.add(label);
 			
 			this.setChanged();
@@ -90,18 +203,32 @@ public class TodoistData extends Observable implements Observer {
 		}
 	}
 	
+	/**
+	 * Add a label with the given name and color
+	 * @param name The name for the label
+	 * @param color The color for the label
+	 * @return
+	 */
+	public Label addLabel(String name) {
+		return this.addLabel(name, 1);
+	}
+	
+	/**
+	 * Add a label with the given name and color
+	 * @param name The name for the label
+	 * @param color The color for the label
+	 * @return
+	 */
 	public Label addLabel(String name, int color) {
-		Label label = new Label(name, color);
+		Label label = new Label(this, name, color);
 		if (!labels.contains(label)) {
-			labelsById.put(label.getId(), label);
-			labelsByName.put(label.getName(), label);
 			labels.add(label);
 			
 			this.setChanged();
 			this.notifyObservers(labels);
 			return label;
 		} else {
-			return labelsByName.get(name);
+			return getLabelByName(name);
 		}
 		
 	}
@@ -121,11 +248,20 @@ public class TodoistData extends Observable implements Observer {
 	 * @return The label with the given name or null when it does not exists
 	 */
 	public Label getLabel(String name) {
-		return labelsByName.get(name);
+		return getLabelByName(name);
 	}
 	
 	public ArrayList<Project> getProjects() {
 		return projects;
+	}
+	
+	protected Project getProjectByName(String name) {
+		for (Project project: projects) {
+			if (project.getName().equals(name)) {
+				return project;
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -136,11 +272,50 @@ public class TodoistData extends Observable implements Observer {
 		if (!projects.contains(project)) {
 			project.addObserver(this);
 			projectsById.put(project.getId(), project);
-			projectsByName.put(project.getName(), project);
 			projects.add(project);
 			
 			this.setChanged();
 			this.notifyObservers(projects);
+		}
+	}
+	
+	/**
+	 * Adds a project
+	 * @param name The name of the project
+	 * @return
+	 */
+	public Project addProject(String name) {
+		return this.addProject(name, 1, 0, 1);
+	}
+	
+	/**
+	 * Adds a project
+	 * @param name The name of the project
+	 * @param color The color of the project
+	 * @return
+	 */
+	public Project addProject(String name, int color) {
+		return this.addProject(name, color, 0, 1);
+	}
+	
+	/**
+	 * Adds a project
+	 * @param name The name of the project
+	 * @param color The color of the project
+	 * @param indent The indent for the project
+	 * @param item_order The item_order for the project
+	 * @return
+	 */
+	public Project addProject(String name, int color, int indent, int item_order) {
+		Project project = new Project(this, name, color, indent, item_order);
+		if (!projects.contains(project)) {
+			projects.add(project);
+			
+			this.setChanged();
+			this.notifyObservers();
+			return project;
+		} else {
+			return this.getProjectByName(name);
 		}
 	}
 	
@@ -159,7 +334,7 @@ public class TodoistData extends Observable implements Observer {
 	 * @return A project, or null when it not exist
 	 */
 	public Project getProject(String name) {
-		return projectsByName.get(name);
+		return getProjectByName(name);
 	}
 	
 	public String toString() {

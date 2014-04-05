@@ -53,13 +53,18 @@ public class SyncTest {
 				//Gets data
 				TodoistData data = api.get();
 			
-				//Updates all inbox items
-				Project inbox = data.getProject("Inbox");
-				ArrayList<Item> items = inbox.getItems();
-				for (Item item: items) {
-					item.setContent(item.getContent() + " - updated");
-				}
+				Project testproject = data.addProject("Testproject");				
+				testproject = data.getProject("Testproject");
 				api.syncAndGetUpdated();
+				
+				testproject = data.getProject("Testproject");
+				testproject.addItem("First item");
+				api.syncAndGetUpdated();
+				testproject.addItem("Second item");
+				api.syncAndGetUpdated();
+				testproject.addItem("Third item");
+				api.syncAndGetUpdated();
+				
 				System.out.println(data);
 			} catch (TodoistException e) {
 				// TODO Auto-generated catch block

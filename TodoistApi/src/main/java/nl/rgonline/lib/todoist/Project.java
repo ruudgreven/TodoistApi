@@ -17,7 +17,7 @@ public class Project extends Observable {
 	private boolean is_archived;
 	private boolean collapsed;
 	private long id;
-	private long temp_id;
+	private long temp_id = -1;
 	private boolean is_deleted;
 	private int item_order;
 	private int color;
@@ -26,6 +26,18 @@ public class Project extends Observable {
 	private double last_updated;
 	private int user_id;
 	private int cache_count;
+	
+	protected Project(TodoistData data, String name, int color, int indent, int item_order) {
+		this.data = data;
+		this.name = name;
+		this.color = color;
+		this.indent = indent;
+		this.item_order = item_order;
+		
+		long unixtime = (int) (System.currentTimeMillis() / 1000L);
+		temp_id = Long.parseLong("325" + unixtime);
+	}
+	
 	
 	protected Project(TodoistData data, JSONObject obj) throws JSONException {
 		this.data = data;
@@ -42,20 +54,19 @@ public class Project extends Observable {
 		user_id = obj.getInt("user_id");
 		cache_count = obj.getInt("cache_count");
 		
-		
 		//Dates not supported yet
 		//archive_date
 		//archived_timestamp
 	}
 	
 	protected JSONObject writeJson() {
-		return null;
-		/**
-		if (temp_id != 0) {
+		if (temp_id != -1) {
 			long unixtime = (int) (System.currentTimeMillis() / 1000L);
-			String jsonString = "{\"type\": \"label_register\",\"timestamp\": " + unixtime + ",\"args\": {";
+			String jsonString = "{\"type\": \"project_add\",\"timestamp\": " + unixtime + ",\"temp_id\": \"$" + temp_id + "\",\"args\": {";
 			jsonString +="\"name\": \"" + name + "\",";
-			jsonString +="\"color\": \"" + color + "\"";
+			jsonString +="\"color\": \"" + color + "\",";
+			jsonString +="\"indent\": \"" + indent + "\",";
+			jsonString +="\"item_order\": \"" + item_order + "\"";
 			jsonString += "}}";
 			return new JSONObject(jsonString);
 			
@@ -63,19 +74,98 @@ public class Project extends Observable {
 			long unixtime = (int) (System.currentTimeMillis() / 1000L);
 			String jsonString = "{\"type\": \"label_update\",\"timestamp\": " + unixtime + ",\"args\": {";
 			jsonString +="\"name\": \"" + name + "\",";
-			jsonString +="\"color\": \"" + color + "\"";
+			jsonString +="\"color\": \"" + color + "\",";
+			jsonString +="\"indent\": \"" + indent + "\",";
+			jsonString +="\"item_order\": \"" + item_order + "\"";
 			jsonString += "}}";
 			return new JSONObject(jsonString);
 			
 		} else {
 			return null;
 		}
-		**/
+	}
+	
+	public boolean isTemporary() {
+		return temp_id!=1;
+	}
+
+	/**
+	 * Add a item with the given characteristics to this project
+	 * @param content The content (text) for the item
+	 * @return The added item
+	 */
+	public Item addItem(String content) {
+		return data.addItem(content, this);
+	}
+	
+	/**
+	 * Add a item with the given characteristics to this project
+	 * @param content The content (text) for the item
+	 * @param indent The indent
+	 * @return The added item
+	 */
+	public Item addItem(String content, int indent) {
+		return data.addItem(content, this, indent);
+	}
+	
+	/**
+	 * Add a item with the given characteristics to this project
+	 * @param content The content (text) for the item
+	 * @param indent The indent
+	 * @param priority The priority of the item
+	 * @return The added item
+	 */
+	public Item addItem(String content, int indent, int priority) {
+		return data.addItem(content, this, indent, priority);
+	}
+	
+	/**
+	 * Add a item with the given characteristics to this project
+	 * @param content The content (text) for the item
+	 * @param indent The indent
+	 * @param priority The priority of the item
+	 * @param date_string The date string for the due date
+	 * @param due_date The due date
+	 * @return The added item
+	 */
+	public Item addItem(String content, int indent, int priority, String date_string, Date due_date) {
+		return data.addItem(content, this, indent, priority, date_string, due_date);
+	}
+	
+	/**
+	 * Add a item with the given characteristics to this project
+	 * @param content The content (text) for the item
+	 * @param indent The indent
+	 * @param priority The priority of the item
+	 * @param date_string The date string for the due date
+	 * @param due_date The due date
+	 * @param item_order The item_order of this item
+	 * @return The added item
+	 */
+	public Item addItem(String content, int indent, int priority, String date_string, Date due_date, int item_order) {
+		return data.addItem(content, this, indent, priority, date_string, due_date, item_order);
+	}
+	
+	/**
+	 * Add a item with the given characteristics to this project
+	 * @param content The content (text) for the item
+	 * @param indent The indent
+	 * @param priority The priority of the item
+	 * @param date_string The date string for the due date
+	 * @param due_date The due date
+	 * @param assigned_by_user The uid of the user to which this task is assigned to
+	 * @param responsible_uid The uid of the user who is responsible for this task
+	 * @param item_order The item_order of this item
+	 * @return The added item
+	 */
+	public Item addItem(String content, int indent, int priority, String date_string, Date due_date, int assigned_by_user, int responsible_uid, int item_order) {
+		return data.addItem(content, this, indent, priority, date_string, due_date, assigned_by_user, responsible_uid, item_order);
 	}
 	
 	public boolean isShared() {
 		return shared;
 	}
+	
 	public void setShared(boolean shared) {
 		if (this.shared!=shared) {
 			this.shared = shared;

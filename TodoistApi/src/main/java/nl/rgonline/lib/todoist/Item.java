@@ -17,7 +17,8 @@ import org.json.JSONObject;
 public class Item extends Observable {
 	private TodoistData data;
 	private boolean updated = false;
-		
+	private long temp_id = -1;
+	
 	private int sync_id;
 	private int indent;
 	private ArrayList<Long> labels;
@@ -27,7 +28,6 @@ public class Item extends Observable {
 	private int day_order;
 	private boolean collapsed;
 	private long id;
-	private long temp_id;
 	private boolean has_notifications;
 	private String content;
 	private int item_order;
@@ -36,11 +36,28 @@ public class Item extends Observable {
 	private Date date_added;
 	private int priority;
 	private boolean in_history;
-	private int project_id;
+	private long project_id;
 	private Date due_date;
 	private String date_string;
 	private int user_id;
 	private boolean checked;
+	
+	protected Item(TodoistData data, String content, Project project, int indent, int priority, String date_string, Date due_date, int assigned_by_uid, int responsible_uid, int item_order) {
+		this.data = data;
+		this.content = content;
+		this.project_id = project.getId();
+		this.indent = indent;
+		this.priority = priority;
+		this.date_string = date_string;
+		this.due_date = due_date;
+		this.assigned_by_uid = assigned_by_uid;
+		this.responsible_uid = responsible_uid;
+		this.item_order = item_order;
+		
+		labels = new ArrayList<Long>();
+		long unixtime = (int) (System.currentTimeMillis() / 1000L);
+		temp_id = Long.parseLong("325" + unixtime);
+	}
 	
 	protected Item(TodoistData data, JSONObject obj) throws JSONException {
 		this.data = data;
@@ -57,9 +74,13 @@ public class Item extends Observable {
 		item_order = obj.getInt("item_order");
 		is_deleted = obj.getInt("is_deleted") == 1 ? true: false;
 		assigned_by_uid = obj.getInt("assigned_by_uid");
+		date_added = TodoistApi.parseDate(obj.getString("date_added"));
 		priority = obj.getInt("priority");
 		in_history = obj.getInt("in_history") == 1 ? true: false;
 		project_id = obj.getInt("project_id");
+		if (!obj.isNull("due_date")) { 
+			due_date = TodoistApi.parseDate(obj.getString("due_date"));
+		}
 		date_string = obj.getString("date_string");
 		user_id = obj.getInt("user_id");
 		checked = obj.getInt("checked") == 1 ? true: false;
@@ -81,8 +102,31 @@ public class Item extends Observable {
 	}
 	
 	protected JSONObject writeJson() {
-		if (temp_id != 0) {
-			return null;
+		if (temp_id != -1) {
+			long unixtime = (int) (System.currentTimeMillis() / 1000L);
+			String jsonString = "{\"type\": \"item_add\",\"timestamp\": " + unixtime + ",\"temp_id\": \"$" + temp_id + "\",\"args\": {";
+			jsonString +="\"content\": \"" + content + "\",";
+			jsonString +="\"project_id\": " + project_id + ",";
+			jsonString +="\"indent\": " + indent + ",";
+			if (priority < 1) {
+				jsonString +="\"priority\": 1,";
+			} else {
+				jsonString +="\"priority\": " + priority + ",";
+			}
+			if (date_string != null) {
+				jsonString +="\"date_string\": \"" + date_string + "\",";
+			}
+			if (due_date != null) {
+				jsonString +="\"due_date_utc\": \"" + TodoistApi.dateToDueDateString(due_date) + "\",";
+			}
+			jsonString +="\"item_order\": " + item_order + ",";
+			jsonString +="\"assigned_by_uid\": " + assigned_by_uid + ",";
+			jsonString +="\"responsible_uid\": " + responsible_uid;
+			jsonString += "}}";
+			
+			updated = false;
+			temp_id = -1;
+			return new JSONObject(jsonString);
 		} else if (updated) {
 			long unixtime = (int) (System.currentTimeMillis() / 1000L);
 			String jsonString = "{\"type\": \"item_update\",\"timestamp\": " + unixtime + ",\"args\": {";
@@ -91,18 +135,26 @@ public class Item extends Observable {
 			jsonString +="\"indent\": " + indent + ",";
 			jsonString +="\"priority\": " + priority + ",";
 			jsonString +="\"checked\": " + (checked ? 1: 0) + ",";
-			//jsonString +="\"date_string\": " + date_string + ",";
-			//jsonString +="\"due_date_utc\": " + due_date_utc + ",";
+			jsonString +="\"in_history\": " + (in_history ? 1: 0) + ",";
+			jsonString +="\"date_string\": " + date_string + ",";
+			jsonString +="\"due_date_utc\": " + TodoistApi.dateToDueDateString(due_date) + ",";
 			jsonString +="\"item_order\": " + item_order + ",";
 			jsonString +="\"day_order\": " + day_order + ",";
 			jsonString +="\"assigned_by_uid\": " + assigned_by_uid + ",";
 			jsonString +="\"responsible_uid\": " + responsible_uid + ",";
 			jsonString +="\"id\": \"" + id + "\"";
 			jsonString += "}}";
+			
+			updated = false;
+			temp_id = -1;
 			return new JSONObject(jsonString);
 		} else {
 			return null;
 		}
+	}
+	
+	public boolean isTemporary() {
+		return temp_id!=1;
 	}
 	
 	protected long getId() {
