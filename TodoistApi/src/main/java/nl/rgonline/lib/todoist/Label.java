@@ -42,8 +42,7 @@ public class Label extends Observable {
 	protected JSONObject writeJson() {
 		if (temp_id != 0) {
 			long unixtime = (int) (System.currentTimeMillis() / 1000L);
-			String jsonString = "{\"type\": \"label_register\",\"timestamp\": " + unixtime + ",\"args\": {";
-			jsonString +="\"id\": \"" + temp_id + "\",";
+			String jsonString = "{\"type\": \"label_register\",\"timestamp\": " + unixtime + ",\"temp_id\": \"$" + temp_id + "\",\"args\": {";
 			jsonString +="\"name\": \"" + name + "\",";
 			jsonString +="\"color\": \"" + color + "\"";
 			jsonString += "}}";
@@ -57,7 +56,6 @@ public class Label extends Observable {
 			jsonString +="\"color\": \"" + color + "\"";
 			jsonString += "}}";
 			return new JSONObject(jsonString);
-			
 		} else {
 			return null;
 		}
