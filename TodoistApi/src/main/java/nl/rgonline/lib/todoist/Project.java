@@ -16,8 +16,7 @@ public class Project extends Observable {
 	private Date archive_date;
 	private boolean is_archived;
 	private boolean collapsed;
-	private long id;
-	private long temp_id = -1;
+	private long id = -1;
 	private boolean is_deleted;
 	private int item_order;
 	private int color;
@@ -27,6 +26,10 @@ public class Project extends Observable {
 	private int user_id;
 	private int cache_count;
 	
+
+	private long temp_id = -1;
+	private static int temp_id_follow_nr = 1;
+	
 	protected Project(TodoistData data, String name, int color, int indent, int item_order) {
 		this.data = data;
 		this.name = name;
@@ -35,7 +38,8 @@ public class Project extends Observable {
 		this.item_order = item_order;
 		
 		long unixtime = (int) (System.currentTimeMillis() / 1000L);
-		temp_id = Long.parseLong("325" + unixtime);
+		temp_id_follow_nr++;
+		temp_id = Long.parseLong("325" + unixtime + temp_id_follow_nr);
 	}
 	
 	
@@ -68,6 +72,9 @@ public class Project extends Observable {
 			jsonString +="\"indent\": \"" + indent + "\",";
 			jsonString +="\"item_order\": \"" + item_order + "\"";
 			jsonString += "}}";
+			
+			updated = false;
+			temp_id = -1;
 			return new JSONObject(jsonString);
 			
 		} else if (updated) {
@@ -78,6 +85,9 @@ public class Project extends Observable {
 			jsonString +="\"indent\": \"" + indent + "\",";
 			jsonString +="\"item_order\": \"" + item_order + "\"";
 			jsonString += "}}";
+			
+			updated = false;
+			temp_id = -1;
 			return new JSONObject(jsonString);
 			
 		} else {
@@ -92,20 +102,18 @@ public class Project extends Observable {
 	/**
 	 * Add a item with the given characteristics to this project
 	 * @param content The content (text) for the item
-	 * @return The added item
 	 */
-	public Item addItem(String content) {
-		return data.addItem(content, this);
+	public void addItem(String content) {
+		data.addItem(content, this);
 	}
 	
 	/**
 	 * Add a item with the given characteristics to this project
 	 * @param content The content (text) for the item
 	 * @param indent The indent
-	 * @return The added item
 	 */
-	public Item addItem(String content, int indent) {
-		return data.addItem(content, this, indent);
+	public void addItem(String content, int indent) {
+		data.addItem(content, this, indent);
 	}
 	
 	/**
@@ -113,10 +121,9 @@ public class Project extends Observable {
 	 * @param content The content (text) for the item
 	 * @param indent The indent
 	 * @param priority The priority of the item
-	 * @return The added item
 	 */
-	public Item addItem(String content, int indent, int priority) {
-		return data.addItem(content, this, indent, priority);
+	public void addItem(String content, int indent, int priority) {
+		data.addItem(content, this, indent, priority);
 	}
 	
 	/**
@@ -126,10 +133,9 @@ public class Project extends Observable {
 	 * @param priority The priority of the item
 	 * @param date_string The date string for the due date
 	 * @param due_date The due date
-	 * @return The added item
 	 */
-	public Item addItem(String content, int indent, int priority, String date_string, Date due_date) {
-		return data.addItem(content, this, indent, priority, date_string, due_date);
+	public void addItem(String content, int indent, int priority, String date_string, Date due_date) {
+		data.addItem(content, this, indent, priority, date_string, due_date);
 	}
 	
 	/**
@@ -140,10 +146,9 @@ public class Project extends Observable {
 	 * @param date_string The date string for the due date
 	 * @param due_date The due date
 	 * @param item_order The item_order of this item
-	 * @return The added item
 	 */
-	public Item addItem(String content, int indent, int priority, String date_string, Date due_date, int item_order) {
-		return data.addItem(content, this, indent, priority, date_string, due_date, item_order);
+	public void addItem(String content, int indent, int priority, String date_string, Date due_date, int item_order) {
+		data.addItem(content, this, indent, priority, date_string, due_date, item_order);
 	}
 	
 	/**
@@ -156,10 +161,18 @@ public class Project extends Observable {
 	 * @param assigned_by_user The uid of the user to which this task is assigned to
 	 * @param responsible_uid The uid of the user who is responsible for this task
 	 * @param item_order The item_order of this item
-	 * @return The added item
 	 */
-	public Item addItem(String content, int indent, int priority, String date_string, Date due_date, int assigned_by_user, int responsible_uid, int item_order) {
-		return data.addItem(content, this, indent, priority, date_string, due_date, assigned_by_user, responsible_uid, item_order);
+	public void addItem(String content, int indent, int priority, String date_string, Date due_date, int assigned_by_user, int responsible_uid, int item_order) {
+		data.addItem(content, this, indent, priority, date_string, due_date, assigned_by_user, responsible_uid, item_order);
+	}
+	
+	/**
+	 * Receives the item with the given text in this project
+	 * @param content
+	 * @return The item
+	 */
+	public Item getItem(String content) {
+		return data.getItem(content, this);
 	}
 	
 	public boolean isShared() {
@@ -281,7 +294,11 @@ public class Project extends Observable {
 		}
 	}
 	public long getId() {
-		return id;
+		if (id != -1) {
+			return id;
+		} else {
+			return temp_id;
+		}
 	}
 	
 	/**
@@ -303,6 +320,9 @@ public class Project extends Observable {
 			return false;
 		}
 		Project other = (Project)o;
+		if (this.temp_id != -1) {
+			return false;
+		}
 		return id == other.id;
 	}
 	

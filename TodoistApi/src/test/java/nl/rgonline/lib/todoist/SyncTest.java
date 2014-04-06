@@ -52,17 +52,21 @@ public class SyncTest {
 			try {
 				//Gets data
 				TodoistData data = api.get();
-			
-				Project testproject = data.addProject("Testproject");				
-				testproject = data.getProject("Testproject");
+				long unixtime = (int) (System.currentTimeMillis() / 1000L);
+				
+				data.addLabel("My favorite label" + unixtime);
+				data.addProject("New Testproject" + unixtime);
 				api.syncAndGetUpdated();
 				
-				testproject = data.getProject("Testproject");
-				testproject.addItem("First item");
+				Project testproject = data.getProject("New Testproject" + unixtime);
+				Label mylabel = data.getLabel("My favorite label" + unixtime);
+				
+				testproject.addItem("NEW First item");
+				testproject.addItem("NEW Second item");
+				testproject.addItem("NEW Third item");
 				api.syncAndGetUpdated();
-				testproject.addItem("Second item");
-				api.syncAndGetUpdated();
-				testproject.addItem("Third item");
+				
+				testproject.getItem("NEW First item").addLabel(mylabel);
 				api.syncAndGetUpdated();
 				
 				System.out.println(data);

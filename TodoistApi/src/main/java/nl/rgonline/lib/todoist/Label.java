@@ -15,11 +15,14 @@ public class Label extends Observable {
 	private boolean updated = false;
 	
 	private int uid;
-	private long id;
-	private long temp_id = -1;
+	private long id = -1;
+
 	private boolean is_deleted;
 	private int color;
 	private String name;
+	
+	private long temp_id = -1;
+	private static int temp_id_follow_nr = 1;
 	
 	protected Label(TodoistData data, String name, int color) {
 		this.data = data;
@@ -27,7 +30,8 @@ public class Label extends Observable {
 		this.color = color;
 		
 		long unixtime = (int) (System.currentTimeMillis() / 1000L);
-		temp_id = Long.parseLong("325" + unixtime);
+		temp_id_follow_nr++;
+		temp_id = Long.parseLong("325" + unixtime + temp_id_follow_nr);
 	}
 	
 	protected Label(TodoistData data, JSONObject obj) throws JSONException {
@@ -72,7 +76,11 @@ public class Label extends Observable {
 	}
 
 	public long getId() {
-		return id;
+		if (id != -1) {
+			return id;
+		} else {
+			return temp_id;
+		}
 	}
 	
 	public int getUid() {
@@ -125,6 +133,9 @@ public class Label extends Observable {
 			return false;
 		}
 		Label other = (Label)o;
+		if (this.temp_id != -1) {
+			return false;
+		}
 		return id == other.id;
 	}
 	

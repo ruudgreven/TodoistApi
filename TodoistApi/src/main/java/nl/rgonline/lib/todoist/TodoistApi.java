@@ -11,6 +11,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * This class can be used to access the Todoist API. You should use it as follows:
+ * 
+ * TodoistApi api = new TodoistApi();
+ * api.login(p.getProperty("username"), p.getProperty("password");
+ * TodoistData data = api.get();
+ * 
+ * After this you can use the data object to read and manipulate the Todoist data.
+ * 
+ * IMPORTANT USAGE INFORMATION: Whenever you add an Item, Project or Label it will be added with a temporary id. At this moment it is neccessary to call syncAndGetUpdated() to
+ * ensure that you can use your newly created item, project or label.
+ * @author ruudgreven
+ *
+ */
 public class TodoistApi {
 	private static final String BASE_URL = "https://api.todoist.com";
 	private String username;
@@ -96,22 +110,22 @@ public class TodoistApi {
 			JSONObject obj = project.writeJson();
 			if (obj!=null) {
 				itemsToSync.put(obj);
+				projectsToRemove.add(project);
 			}
-			projectsToRemove.add(project);
 		}
 		for (Label label: data.labels) {
 			JSONObject obj = label.writeJson();
 			if (obj!=null) {
 				itemsToSync.put(obj);
+				labelsToRemove.add(label);
 			}
-			labelsToRemove.add(label);
 		}
 		for (Item item: data.items) {
 			JSONObject obj = item.writeJson();
 			if (obj!=null) {
 				itemsToSync.put(obj);
-			}
-			itemsToRemove.add(item);
+				itemsToRemove.add(item);
+			}	
 		}
 
 

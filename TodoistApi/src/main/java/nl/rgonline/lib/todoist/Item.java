@@ -17,8 +17,7 @@ import org.json.JSONObject;
 public class Item extends Observable {
 	private TodoistData data;
 	private boolean updated = false;
-	private long temp_id = -1;
-	
+
 	private int sync_id;
 	private int indent;
 	private ArrayList<Long> labels;
@@ -27,7 +26,7 @@ public class Item extends Observable {
 	private boolean is_archived;
 	private int day_order;
 	private boolean collapsed;
-	private long id;
+	private long id = -1;
 	private boolean has_notifications;
 	private String content;
 	private int item_order;
@@ -41,6 +40,9 @@ public class Item extends Observable {
 	private String date_string;
 	private int user_id;
 	private boolean checked;
+	
+	private long temp_id = -1;
+	private static int temp_id_follow_nr = 1;
 	
 	protected Item(TodoistData data, String content, Project project, int indent, int priority, String date_string, Date due_date, int assigned_by_uid, int responsible_uid, int item_order) {
 		this.data = data;
@@ -56,7 +58,8 @@ public class Item extends Observable {
 		
 		labels = new ArrayList<Long>();
 		long unixtime = (int) (System.currentTimeMillis() / 1000L);
-		temp_id = Long.parseLong("325" + unixtime);
+		temp_id_follow_nr++;
+		temp_id = Long.parseLong("325" + unixtime + temp_id_follow_nr);
 	}
 	
 	protected Item(TodoistData data, JSONObject obj) throws JSONException {
@@ -158,7 +161,11 @@ public class Item extends Observable {
 	}
 	
 	protected long getId() {
-		return id;
+		if (id != -1) {
+			return id;
+		} else {
+			return temp_id;
+		}
 	}
 	
 	public int getIndent() {
@@ -324,6 +331,9 @@ public class Item extends Observable {
 			return false;
 		}
 		Item other = (Item)o;
+		if (this.temp_id != -1) {
+			return false;
+		}
 		return id == other.id;
 	}
 	
@@ -343,7 +353,7 @@ public class Item extends Observable {
 	}
 	
 	public String toString() {
-		String retVal = "(" + id + ") " + content + ", done: " + (checked ? "yes" : "no") + ", labels: ";
+		String retVal = "(" + id + ") " + content + ", project: " + this.project_id + ", done: " + (checked ? "yes" : "no") + ", labels: ";
 		boolean first = true;
 		for (Label label: this.getLabels()) {
 			if (first) {
