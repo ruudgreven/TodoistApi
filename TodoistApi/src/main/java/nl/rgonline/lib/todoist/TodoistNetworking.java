@@ -41,9 +41,6 @@ public class TodoistNetworking {
 			} catch (UnsupportedEncodingException e) {
 				TodoistLogger.error("TodoistNetworking", "doRequest", "Error encoding post params");
 				e.printStackTrace();
-			} catch (URISyntaxException e) {
-				TodoistLogger.error("TodoistNetworking", "doRequest", "Error in URL Syntax");
-				e.printStackTrace();
 			}
 			if (params!=null) {
 				TodoistLogger.debug("TodoistNetworking", "doRequest", "POST Request with params to URL: " + url);
@@ -51,12 +48,7 @@ public class TodoistNetworking {
 				TodoistLogger.debug("TodoistNetworking", "doRequest", "POST Request to URL: " + url);
 			}
 		} else {
-			try {
-				request= new HttpGet(url);
-			} catch (URISyntaxException e) {
-				TodoistLogger.error("TodoistNetworking", "doRequest", "Error in URL Syntax");
-				e.printStackTrace();
-			}
+			request= new HttpGet(url);
 			TodoistLogger.debug("TodoistNetworking", "doRequest", "GET Request to URL: " + url);
 		}
 
