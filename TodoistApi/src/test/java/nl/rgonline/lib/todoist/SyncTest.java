@@ -13,7 +13,6 @@ import org.junit.Test;
 
 public class SyncTest {
 
-	/**
 	@Test
 	public void testGet() throws FileNotFoundException, IOException {
 		Properties p = new Properties();
@@ -38,8 +37,7 @@ public class SyncTest {
 			throw e;
 		}
 	}
-	**/
-	
+ /**	
 	@Test
 	public void testSyncAndGetUpdated() throws FileNotFoundException, IOException {
 		Properties p = new Properties();
@@ -82,4 +80,5 @@ public class SyncTest {
 			throw e;
 		}
 	}
+	**/
 }
